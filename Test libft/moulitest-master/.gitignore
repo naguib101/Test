@@ -1,0 +1,26 @@
+main.build.c
+unit_test
+*.o
+*.so
+libft/moulitest
+
+# USER LOCAL FILES
+config
+config.sh
+config.json
+config.ini
+
+# compiled files
+test_gnl
+
+# IDE
+.idea
+
+# temporary files
+sandbox
+
+# exec
+ft_ls_tests/ft_ls_test*
+libft_tests/libft_test*
+get_next_line_tests/get_next_line_tests*
+ft_printf_tests/ft_printf_test*

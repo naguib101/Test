@@ -1,0 +1,312 @@
+#!/bin/bash
+
+version=":v.0.1.2:";
+
+function usage
+{
+	printf "\033[91musage: \033[92mmoulibadger ";
+	printf "\033[0m<\033[93m-c\033[0m|\033[93m-x\033[0m> ";
+	printf "\033[96m<libft_dir>\033[0m\n";
+	printf "       \033[92mmoulibadger ";
+	printf "\033[0m<\033[93m--clean\033[0m|\033[93m--reload\033[0m>\n";
+	printf "\n\033[93m -c: \033[0mCompile/Recompile sources, and run moulibadger (if you have modified some source files)\n";
+	printf "\033[93m -x: \033[0mOnly run moulibadger (deprecated)\n";
+	printf "\033[93m --clean: \033[0mClean tmp files (you will need an Internet connection when you recompile)\n";
+	printf "\033[93m --reload: \033[0mOReload previous version\n";
+	exit ;
+}
+
+if [[ $# == 1 ]]
+then
+	if [[ "$1" != "--clean" && "$1" != "--reload" ]]
+	then
+		usage;
+	fi
+elif [[ $# != 2 || ($# == 2 && ! -d $2) ]]
+then
+	if [[ "$1" != "-x" && "$1" != "-c" ]]
+	then
+		usage;
+	fi
+fi
+
+
+if [[ $# == 1 ]]
+then
+	if [[ $1 == "--reload" ]]
+	then
+		if [[ -d /tmp/moulibadger && `find /tmp/moulibadger/ -iname "*.old"` != "" ]]
+		then
+			for i in /tmp/moulibadger/*.old
+			do
+				cp $i `echo $i | sed -e "s/.old//g"`
+			done												&&
+			printf "\033[92mPrevious config loaded.\033[0m\n"	;
+			exit												;
+		else
+			printf "\033[91mNothing to reload.\033[0m\n"	;
+			exit											;
+		fi
+	elif [[ $1 == "--clean" ]]
+	then
+		if [[ -d /tmp/moulibadger ]]
+		then
+			rm -rf /tmp/moulibadger							&&
+			printf "\033[92mTmp files cleaned.\033[0m\n"	;
+			exit											;
+		else
+			printf "\033[91mNothing to clean.\033[0m\n"	;
+			exit										;
+		fi
+	fi
+fi
+
+fList=(
+		"ft_atoi.c"
+		"ft_bzero.c"
+		"ft_isalnum.c"
+		"ft_isalpha.c"
+		"ft_isascii.c"
+		"ft_isdigit.c"
+		"ft_isprint.c"
+		"ft_itoa.c"
+		"ft_memalloc.c"
+		"ft_memccpy.c"
+		"ft_memchr.c"
+		"ft_memcmp.c"
+		"ft_memcpy.c"
+		"ft_memdel.c"
+		"ft_memmove.c"
+		"ft_memset.c"
+		"ft_putchar.c"
+		"ft_putchar_fd.c"
+		"ft_putendl.c"
+		"ft_putendl_fd.c"
+		"ft_putnbr.c"
+		"ft_putnbr_fd.c"
+		"ft_putstr.c"
+		"ft_putstr_fd.c"
+		"ft_strcat.c"
+		"ft_strchr.c"
+		"ft_strclr.c"
+		"ft_strcmp.c"
+		"ft_strcpy.c"
+		"ft_strdel.c"
+		"ft_strdup.c"
+		"ft_strequ.c"
+		"ft_striter.c"
+		"ft_striteri.c"
+		"ft_strjoin.c"
+		"ft_strlcat.c"
+		"ft_strlen.c"
+		"ft_strmap.c"
+		"ft_strmapi.c"
+		"ft_strncat.c"
+		"ft_strncmp.c"
+		"ft_strncpy.c"
+		"ft_strnequ.c"
+		"ft_strnew.c"
+		"ft_strnstr.c"
+		"ft_strrchr.c"
+		"ft_strsplit.c"
+		"ft_strstr.c"
+		"ft_strsub.c"
+		"ft_strtrim.c"
+)
+
+if [[ ! -d /tmp/moulibadger ]]
+then
+	mkdir /tmp/moulibadger;
+fi
+
+FLIST="/tmp/moulibadger/FLIST.list";
+
+if [[ -f $FLIST ]]
+then
+	rm -rf $FLIST;
+fi
+
+for i in {0..50}
+do
+	echo ${fList[$i]} >> $FLIST;
+done
+
+mainRep="$2"
+mESource="https://raw.githubusercontent.com/HoneyBadger42/moulibadger/master/moulibadger";
+mExec="/tmp/moulibadger/moulibadger";
+mLln="https://raw.githubusercontent.com/HoneyBadger42/moulibadger/master/srcwork/listlib.h";
+mLSource="/tmp/moulibadger/listlib.h";
+mList="/tmp/moulibadger/liblist.list";
+funcLIST="/tmp/moulibadger/funcLIST.list";
+mCln="https://raw.githubusercontent.com/HoneyBadger42/moulibadger/master/srcwork/moulib.c";
+mCSource="/tmp/moulibadger/moulib.c";
+mHln="https://raw.githubusercontent.com/HoneyBadger42/moulibadger/master/srcwork/libft.h";
+mHSource="/tmp/moulibadger/libft.h";
+
+if [[
+	`ifconfig			|
+	grep "inet "		|
+	grep -v "127.0.0.1"	|
+	awk '{print $1}'	|
+	cut -d ':' -f2` != ""
+]]
+then
+	isCon="1";
+else
+	isCon="0";
+fi
+
+function get_sources
+{
+	if [[ $isCon == "0" ]]
+	then
+		printf "\033[91mError\033[0m: Cannot download moulibadger's sources...\n";
+		printf "       Please check your internet connection...\n";
+		exit;
+	fi
+
+	printf "Getting moulibadger's sources...\n"	&&
+		curl -s $mCln > $mCSource				&&
+		curl -s $mHln > $mHSource				&&
+		curl -s $mLln > $mLSource				&&
+		printf "\033[92mDone\033[0m\n"			;
+}
+
+function check_content
+{
+	if [[ ! -f $mLSource ]]
+	then
+		curl -s $mLln > $mLSource;
+	fi
+
+	ls -1 $mainRep | grep "ft_" > $mList;
+
+	diff $FLIST $mList --suppress-common-lines | grep "<" | cut -c 3- > $funcLIST;
+	cat $funcLIST > $mList;
+	rm $funcLIST;
+
+	if [[ `cat $mList | grep "ft_"` != "" ]]
+	then
+		for i in `cat $mList | grep "ft_"`
+		do
+			echo "#include \"libft.h\"" > $mainRep/$i;
+			cat $mLSource | grep `echo $i | cut -d '.' -f 1` >> $mainRep/$i;
+		done
+	fi
+}
+
+function compile
+{
+	cancompile="0";
+
+	if [[ -f $mainRep/libft.h ]]
+	then
+		mv $mainRep/libft.h $mainRep/.libft.h;
+	fi
+	cp $mHSource $mainRep/libft.h;
+	gCompile="gcc -w $1/*.c -o $mExec";
+
+	check_content					&&
+	printf "Compiling sources...\n"	&&
+	cp $mCSource $1					&&
+	$($gCompile)					|| cancompile="1";
+
+	rm $mainRep/libft.h;
+
+	if [[ -f $mainRep/.libft.h ]]
+	then
+		mv $mainRep/.libft.h $mainRep/libft.h;
+	fi
+	rm $1/moulib.c					;
+
+	if [[ `cat $mList | grep "ft_"` != "" ]]
+	then
+		for i in `cat $mList | grep "ft_"`
+		do
+			rm $1/$i;
+		done
+	fi
+
+	if [[ $cancompile == "1" ]]
+	then
+		printf "\n\033[91mError\033[0m: Cannot compile...\nYour functions may not be correctly formatted...\n";
+		exit;
+	fi
+
+	printf "\033[92mDone\033[0m\n\n";
+}
+
+function execute
+{
+	$mExec $1;
+}
+
+if [[ $isCon == "1" ]]
+then
+	if [[
+		`curl -s $mESource							|
+		grep "version=\":v.[0-9].[0-9].[0-9]:\""	|
+		cut -d '=' -f 2								|
+		cut -d '"' -f 2								|
+		head -n 1` != `echo $version`
+	]]
+	then
+		printf "\033c";
+		printf "\033[93mA new version is available\033[0m\n";
+		printf "Do you want to install it [Yes/No]: ";
+		read ans;
+		if [[
+			`echo $ans | tr '[:upper:]' '[:lower:]'` == "yes" ||
+			`echo $ans | tr '[:upper:]' '[:lower:]'` == "y"
+		]]
+		then
+			cp ./moulibadger /tmp/moulibadger/moulibadger.old;
+			curl -s $mESource > ./moulibadger 2> /dev/null;
+
+			if [[ -f $mHSource ]]
+			then
+				cp $mHSource $mHSource.old;
+			fi
+
+			get_sources 2> /dev/null;
+			exit;
+		fi
+	fi
+fi
+
+if [[ $# == 2 ]]
+then
+	if [[ `ls -1 $2 | grep "ft_" | wc -l` -le "5" ]]
+	then
+		printf "\033[93mWarning\033[0m: You're not in your libft's directory\n";
+		exit;
+	fi
+	if [[ $1 == "-x" ]]
+	then
+		if [[ ! -f $mExec ]]
+		then
+			if [[ -f $mCSource && -f $mHSource && -f $mLSource ]]
+			then
+				compile $2	&&
+				execute $2	;
+			else
+				get_sources	;
+					compile $2	&&
+				execute $2	;
+			fi
+		else
+			execute $2		;
+		fi
+	elif [[ $1 == "-c" ]]
+	then
+		if [[ -f $mCSource && -f $mHSource ]]
+		then
+			compile $2	&&
+			execute $2	;
+		else
+			get_sources	;
+			compile $2	&&
+			execute $2	;
+		fi
+	fi
+fi
